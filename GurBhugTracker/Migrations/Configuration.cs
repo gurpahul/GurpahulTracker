@@ -53,6 +53,12 @@ namespace GurBhugTracker.Migrations
                 adminUser = new ApplicationUser();
                 adminUser.Email = "admin@bugtracker.com";
                 adminUser.UserName = "admin@bugtracker.com";
+                adminUser.Email = "admin@bugtracker.com";
+                adminUser.LastName = "Admin";
+                adminUser.FirstName = "Gurpahul";
+                adminUser.DisplayName = "GurpahulSingh";
+               
+
 
                 userManager.Create(adminUser, "Password-1");
             }

@@ -35,6 +35,9 @@ namespace GurBhugTracker.Controllers
         {
             return View();
         }
-
+        public ActionResult ChangeRole()
+        {
+            return View();
+        }
     }
 }

@@ -1,0 +1,41 @@
+﻿
+@model GurBhugTracker.Models.UserRoleViewModel
+
+@{
+    ViewBag.Title = "ChangeRole";
+}
+
+
+
+
+
+<div id="page-wrapper">
+
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+        <div class="row">
+            <div class="col-lg-12">
+                <hr />
+                <h2>ChangeRole</h2>
+                <p>
+                    User: @Model.Name
+                </p>
+                @using (Html.BeginForm())
+                {
+                    @Html.HiddenFor(p => p.Id)
+                    @Html.ListBoxFor(p => p.SelectedRoles, Model.Roles)
+                    <input type="submit" value="Submit!" />
+                }
+
+            </div>
+        </div>
+        <!-- /.row -->
+
+    </div>
+    <!-- /.container-fluid -->
+
+</div>
+
+
+
