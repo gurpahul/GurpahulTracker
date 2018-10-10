@@ -14,6 +14,7 @@ namespace GurBhugTracker.Controllers
         public ActionResult Index()
         {
             return View(db.Users.ToList());
+
         }
 
         public ActionResult ChangeRole(string id)

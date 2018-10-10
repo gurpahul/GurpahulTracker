@@ -200,6 +200,7 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
     <Compile Include="Controllers\ProjectsController.cs" />
+    <Compile Include="Controllers\TicketsController.cs" />
     <Compile Include="Controllers\UserRoleHelper.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -211,6 +212,10 @@
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\ProjectAssignViewModel.cs" />
     <Compile Include="Models\Projects.cs" />
+    <Compile Include="Models\Ticket.cs" />
+    <Compile Include="Models\TicketPriority.cs" />
+    <Compile Include="Models\TicketStatus.cs" />
+    <Compile Include="Models\TicketType.cs" />
     <Compile Include="Models\UserRoleViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
@@ -335,6 +340,11 @@
     <Content Include="Views\ApplicationUsers\Index.cshtml" />
     <Content Include="Views\ApplicationUsers\ChangeRole.cshtml" />
     <Content Include="Views\Projects\AssignUsers.cshtml" />
+    <Content Include="Views\Tickets\Create.cshtml" />
+    <Content Include="Views\Tickets\Delete.cshtml" />
+    <Content Include="Views\Tickets\Details.cshtml" />
+    <Content Include="Views\Tickets\Edit.cshtml" />
+    <Content Include="Views\Tickets\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -45,5 +45,15 @@ namespace GurBhugTracker.Models
 
         public System.Data.Entity.DbSet<GurBhugTracker.Models.Projects> Projects { get; set; }
 
+
+
+        public System.Data.Entity.DbSet<GurBhugTracker.Models.Ticket> Tickets { get; set; }
+
+        public System.Data.Entity.DbSet<GurBhugTracker.Models.TicketStatus> TicketStatuses { get; set; }
+        public System.Data.Entity.DbSet<GurBhugTracker.Models.TicketPriority> TicketPriorities { get; set; }
+        public System.Data.Entity.DbSet<GurBhugTracker.Models.TicketType> TicketTypes { get; set; }
+
+
     }
+
 }

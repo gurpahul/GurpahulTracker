@@ -9,6 +9,7 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using GurBhugTracker.Models;
+using Microsoft.AspNet.Identity.EntityFramework;
 
 namespace GurBhugTracker.Controllers
 {
@@ -18,8 +19,14 @@ namespace GurBhugTracker.Controllers
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
 
+
+        private ApplicationDbContext context;
+        private RoleManager<IdentityRole> RoleManager;
+
         public AccountController()
         {
+            context = new ApplicationDbContext();
+            RoleManager = new RoleManager<IdentityRole>(new RoleStore<IdentityRole>(context));
         }
 
         public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
@@ -153,6 +160,11 @@ namespace GurBhugTracker.Controllers
             {
                 var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
                 var result = await UserManager.CreateAsync(user, model.Password);
+
+                if (!UserManager.IsInRole(user.Id, "Submitter"))
+                {
+                    UserManager.AddToRole(user.Id, "Submitter");
+                }
                 if (result.Succeeded)
                 {
                     await SignInManager.SignInAsync(user, isPersistent:false, rememberBrowser:false);
