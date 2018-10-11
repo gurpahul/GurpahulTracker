@@ -20,7 +20,8 @@
     <!-- Custom Fonts -->
 
     <link href="~/Content/font-awesome.min.css" rel="stylesheet" />
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
         <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
@@ -66,7 +67,7 @@
                             <a href="@Url.Action("Index","Projects")"><i class="fa fa-fw fa-desktop"></i> Projects</a>
                         </li>
                     }
-                  
+
                 </ul>
             </div>
             <!-- /.navbar-collapse -->
@@ -80,10 +81,10 @@
     <script src="~/Scripts/jquery.js"></script>
     <script src="~/Scripts/bootstrap.min.js"></script>
     <!-- Morris Charts JavaScript -->
-    <script src="~/Scripts/raphael.min.js"></script>
-    <script src="~/Scripts/morris.min.js"></script>
-    <script src="~/Scripts/morris-data.js"></script>
-    @RenderSection("Scripts", false)
+
+
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+    @RenderSection("Scripts", required: false)
 
 </body>
 </html>

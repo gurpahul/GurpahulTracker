@@ -19,14 +19,9 @@ namespace GurBhugTracker.Controllers
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
 
-
-        private ApplicationDbContext context;
-        private RoleManager<IdentityRole> RoleManager;
-
         public AccountController()
         {
-            context = new ApplicationDbContext();
-            RoleManager = new RoleManager<IdentityRole>(new RoleStore<IdentityRole>(context));
+            
         }
 
         public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
@@ -161,13 +156,16 @@ namespace GurBhugTracker.Controllers
                 var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
                 var result = await UserManager.CreateAsync(user, model.Password);
 
-                if (!UserManager.IsInRole(user.Id, "Submitter"))
-                {
-                    UserManager.AddToRole(user.Id, "Submitter");
-                }
+                
                 if (result.Succeeded)
                 {
+                    
+                    
+                        UserManager.AddToRole(user.Id, "Submitter");
+                    
+
                     await SignInManager.SignInAsync(user, isPersistent:false, rememberBrowser:false);
+
                     
                     // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=320771
                     // Send an email with this link

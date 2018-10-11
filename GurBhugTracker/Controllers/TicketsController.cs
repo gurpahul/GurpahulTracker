@@ -7,6 +7,7 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using GurBhugTracker.Models;
+using Microsoft.AspNet.Identity;
 
 namespace GurBhugTracker.Controllers
 {
@@ -17,7 +18,8 @@ namespace GurBhugTracker.Controllers
         // GET: Tickets
         public ActionResult Index()
         {
-            return View(db.Tickets.ToList());
+            var tickets = db.Tickets.Include(t => t.Assignee).Include(t => t.Creater).Include(t => t.Project).Include(t => t.TicketPriority).Include(t => t.TicketStatus).Include(t => t.TicketType);
+            return View(tickets.ToList());
         }
 
         // GET: Tickets/Details/5
@@ -36,8 +38,15 @@ namespace GurBhugTracker.Controllers
         }
 
         // GET: Tickets/Create
+        [Authorize(Roles = "Submitter")]
         public ActionResult Create()
         {
+            ViewBag.AssigneeId = new SelectList(db.Users, "Id", "DisplayName");
+            ViewBag.CreaterId = new SelectList(db.Users, "Id", "DisplayName");
+            ViewBag.ProjectId = new SelectList(db.Projects, "Id", "Name");
+            ViewBag.TicketPriorityId = new SelectList(db.TicketPriorities, "Id", "Name");
+            ViewBag.TicketStatusId = new SelectList(db.TicketStatuses, "Id", "Name");
+            ViewBag.TicketTypeId = new SelectList(db.TicketTypes, "Id", "Name");
             return View();
         }
 
@@ -45,16 +54,25 @@ namespace GurBhugTracker.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize(Roles="Submitter")]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Id,Name")] Ticket ticket)
+        public ActionResult Create([Bind(Include = "Id,Name,Description,TicketTypeId,TicketPriorityId,ProjectId")] Ticket ticket)
         {
             if (ModelState.IsValid)
             {
+                ticket.CreaterId = User.Identity.GetUserId();
+                ticket.TicketStatusId = 1;
                 db.Tickets.Add(ticket);
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
 
+           // ViewBag.AssigneeId = new SelectList(db.Users, "Id", "DisplayName", ticket.AssigneeId);
+           // ViewBag.CreaterId = new SelectList(db.Users, "Id", "DisplayName", ticket.CreaterId);
+            ViewBag.ProjectId = new SelectList(db.Projects, "Id", "Name", ticket.ProjectId);
+            ViewBag.TicketPriorityId = new SelectList(db.TicketPriorities, "Id", "Name", ticket.TicketPriorityId);
+           // ViewBag.TicketStatusId = new SelectList(db.TicketStatuses, "Id", "Name", ticket.TicketStatusId);
+            ViewBag.TicketTypeId = new SelectList(db.TicketTypes, "Id", "Name", ticket.TicketTypeId);
             return View(ticket);
         }
 
@@ -70,6 +88,12 @@ namespace GurBhugTracker.Controllers
             {
                 return HttpNotFound();
             }
+            ViewBag.AssigneeId = new SelectList(db.Users, "Id", "DisplayName", ticket.AssigneeId);
+            ViewBag.CreaterId = new SelectList(db.Users, "Id", "DisplayName", ticket.CreaterId);
+            ViewBag.ProjectId = new SelectList(db.Projects, "Id", "Name", ticket.ProjectId);
+            ViewBag.TicketPriorityId = new SelectList(db.TicketPriorities, "Id", "Name", ticket.TicketPriorityId);
+            ViewBag.TicketStatusId = new SelectList(db.TicketStatuses, "Id", "Name", ticket.TicketStatusId);
+            ViewBag.TicketTypeId = new SelectList(db.TicketTypes, "Id", "Name", ticket.TicketTypeId);
             return View(ticket);
         }
 
@@ -78,7 +102,7 @@ namespace GurBhugTracker.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "Id,Name")] Ticket ticket)
+        public ActionResult Edit([Bind(Include = "Id,Name,Description,TicketTypeId,TicketPriorityId,ProjectId")] Ticket ticket)
         {
             if (ModelState.IsValid)
             {
@@ -86,6 +110,12 @@ namespace GurBhugTracker.Controllers
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
+            //ViewBag.AssigneeId = new SelectList(db.Users, "Id", "DisplayName", ticket.AssigneeId);
+            //ViewBag.CreaterId = new SelectList(db.Users, "Id", "DisplayName", ticket.CreaterId);
+            ViewBag.ProjectId = new SelectList(db.Projects, "Id", "Name", ticket.ProjectId);
+            ViewBag.TicketPriorityId = new SelectList(db.TicketPriorities, "Id", "Name", ticket.TicketPriorityId);
+           // ViewBag.TicketStatusId = new SelectList(db.TicketStatuses, "Id", "Name", ticket.TicketStatusId);
+            ViewBag.TicketTypeId = new SelectList(db.TicketTypes, "Id", "Name", ticket.TicketTypeId);
             return View(ticket);
         }
 
