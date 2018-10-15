@@ -23,6 +23,33 @@ namespace GurBhugTracker.Controllers
             return View(tickets.ToList());
         }
 
+
+        // Get Submitter Tickets
+        public ActionResult SubmitterTickets() {
+            var user = User.Identity.GetUserId();
+            if (User.IsInRole("Submitter")) {
+                var tickets = db.Tickets.Where(t => t.CreaterId == user).Include(t => t.Creater).Include(t => t.Assignee).Include(t => t.Project);
+                return View("Index", tickets.ToList());
+            }
+            if (User.IsInRole("Developer"))
+            {
+                var tickets = db.Tickets.Where(t => t.AssigneeId == user).Include(t => t.Creater).Include(t => t.Assignee).Include(t => t.Project);
+                return View("Index", tickets.ToList());
+            }
+            return View("Index");
+
+        }
+
+        [Authorize(Roles = "Project Manager,Developer")]
+        public ActionResult UserInRoleTickets()
+        {
+            string userId = User.Identity.GetUserId();
+            var UserInRoleId = db.Users.Where(p => p.Id == userId).FirstOrDefault();
+            var ProjectId = UserInRoleId.Projects.Select(p => p.Id).FirstOrDefault();
+            var tickets = db.Tickets.Where(p => p.Id == ProjectId).ToList();
+            return View("Index", tickets);
+        }
+
         // GET: Tickets/Details/5
         public ActionResult Details(int? id)
         {
