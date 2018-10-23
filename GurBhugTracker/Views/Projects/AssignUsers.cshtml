@@ -4,11 +4,29 @@
     ViewBag.Title = "AssignUsers";
 }
 
-<h2>AssignUsers</h2>
+<div id="page-wrapper">
+    <div class="container-fluid">
 
-@using (Html.BeginForm())
-{
-    @Html.HiddenFor(p => p.Id)
-    @Html.ListBoxFor(p => p.SelectedUsers, Model.UserList)
-    <input type="submit" value="Submit!" />
-}
+        <h2>AssignUsers</h2>
+
+        @using (Html.BeginForm())
+        {
+            @Html.HiddenFor(p => p.Id)
+            @Html.ListBoxFor(p => p.SelectedUsers, Model.UserList)
+            <input type="submit" value="Submit!" />
+        }
+
+        <div class="row">
+            <div class="col-lg-12">
+
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+

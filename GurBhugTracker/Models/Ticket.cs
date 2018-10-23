@@ -27,9 +27,19 @@ namespace GurBhugTracker.Models
         public int ProjectId { get; set; }
         public virtual Projects Project { get; set; }
 
+        public virtual ICollection<TicketAttachment> Attachments { get; set; }
+        public virtual ICollection<TicketComment> Comments { get; set; }
+        public virtual ICollection<TicketHistory> Histories { get; set; }
+
+
+
+
         public Ticket()
         {
             this.Created = DateTime.Now;
+            Attachments = new HashSet<TicketAttachment>();
+            Comments = new HashSet<TicketComment>();
+            Histories = new HashSet<TicketHistory>();
         }
 
     }

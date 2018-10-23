@@ -22,10 +22,19 @@ namespace GurBhugTracker.Models
         [InverseProperty("Assignee")]
         public virtual ICollection<Ticket> AssignedTickets { get; set; }
 
+        public virtual ICollection<TicketAttachment> TicketAttachments { get; set; }
+        public virtual ICollection<TicketComment> TicketComments { get; set; }
+        public virtual ICollection<TicketHistory> TicketHistories { get; set; }
+
 
         public ApplicationUser()
         {
             Projects = new HashSet<Projects>();
+            CreatedTickets = new HashSet<Ticket>();
+            AssignedTickets = new HashSet<Ticket>();
+            TicketAttachments = new HashSet<TicketAttachment>();
+            TicketComments = new HashSet<TicketComment>();
+            TicketHistories = new HashSet<TicketHistory>();
         }
 
 
@@ -61,6 +70,9 @@ namespace GurBhugTracker.Models
         public System.Data.Entity.DbSet<GurBhugTracker.Models.TicketPriority> TicketPriorities { get; set; }
         public System.Data.Entity.DbSet<GurBhugTracker.Models.TicketType> TicketTypes { get; set; }
 
+        public System.Data.Entity.DbSet<GurBhugTracker.Models.TicketAttachment> TicketAttachments { get; set; }
+        public System.Data.Entity.DbSet<GurBhugTracker.Models.TicketComment> TicketComments { get; set; }
+        public System.Data.Entity.DbSet<GurBhugTracker.Models.TicketHistory> TicketHistories { get; set; }
 
     }
 

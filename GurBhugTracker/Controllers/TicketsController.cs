@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Web;
@@ -33,10 +34,14 @@ namespace GurBhugTracker.Controllers
             }
             if (User.IsInRole("Developer"))
             {
-                var tickets = db.Tickets.Where(t => t.AssigneeId == user).Include(t => t.Creater).Include(t => t.Assignee).Include(t => t.Project);
+                var tickets = db.Tickets.Where(t => t.AssigneeId == user).Include(t => t.Comments).Include(t => t.Creater).Include(t => t.Assignee).Include(t => t.Project);
                 return View("Index", tickets.ToList());
             }
-            return View("Index");
+            if (User.IsInRole("Project Manager"))
+            {
+                return View(db.Tickets.Include(t => t.TicketPriority).Include(t => t.Project).Include(t => t.Comments).Include(t => t.TicketStatus).Include(t => t.TicketType).Where(p => p.AssigneeId == user).ToList());
+            }
+                return View("Index");
 
         }
 
@@ -65,6 +70,31 @@ namespace GurBhugTracker.Controllers
             return View(ticket);
         }
 
+        [HttpPost]
+        public ActionResult CreateComment(int id, string body)
+        {
+            var tickets = db.Tickets
+               .Where(p => p.Id == id)
+               .FirstOrDefault();
+            if (tickets == null)
+            {
+                return HttpNotFound();
+            }
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                ViewBag.ErrorMessage = "Comment is required";
+                return View("Details", tickets);
+            }
+            var comment1 = new TicketComment();
+            comment1.UserId = User.Identity.GetUserId();
+            comment1.TicketId = tickets.Id;
+            comment1.Created = DateTime.Now;
+            comment1.Cpmment = body;
+            db.TicketComments.Add(comment1);
+            db.SaveChanges();
+            return RedirectToAction("Details", new { id });
+        }
+
         // GET: Tickets/Create
         [Authorize(Roles = "Submitter")]
         public ActionResult Create()
@@ -86,23 +116,58 @@ namespace GurBhugTracker.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = "Id,Name,Description,TicketTypeId,TicketPriorityId,ProjectId")] Ticket ticket)
         {
+           
             if (ModelState.IsValid)
             {
-                ticket.CreaterId = User.Identity.GetUserId();
-                ticket.TicketStatusId = 1;
+                if (ticket == null)
+                {
+                    return HttpNotFound();
+                }
+                ticket.TicketStatusId = 3;
                 db.Tickets.Add(ticket);
+                
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
 
-           // ViewBag.AssigneeId = new SelectList(db.Users, "Id", "DisplayName", ticket.AssigneeId);
-           // ViewBag.CreaterId = new SelectList(db.Users, "Id", "DisplayName", ticket.CreaterId);
+          
             ViewBag.ProjectId = new SelectList(db.Projects, "Id", "Name", ticket.ProjectId);
             ViewBag.TicketPriorityId = new SelectList(db.TicketPriorities, "Id", "Name", ticket.TicketPriorityId);
-           // ViewBag.TicketStatusId = new SelectList(db.TicketStatuses, "Id", "Name", ticket.TicketStatusId);
             ViewBag.TicketTypeId = new SelectList(db.TicketTypes, "Id", "Name", ticket.TicketTypeId);
             return View(ticket);
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        //[Authorize(Roles = "Submitter")]
+        public ActionResult CreateAttachment(int ticketId, [Bind(Include = "Id,Description,TicketTypeId")] TicketAttachment ticketAttachment, HttpPostedFileBase image)
+        {
+            if (ModelState.IsValid)
+            {
+                var tickets = db.Tickets.FirstOrDefault(t => t.Id == ticketId);
+                if (!ImageUploadValidator.IsWebFriendlyImage(image))
+                {
+                    ViewBag.ErrorMessage = "Please upload an image";
+
+                }
+                if (image == null)
+                {
+                    return HttpNotFound();
+                }
+                var fileName = Path.GetFileName(image.FileName);
+                image.SaveAs(Path.Combine(Server.MapPath("~/Uploads/"), fileName));
+                ticketAttachment.FilePath = "/Uploads/" + fileName;
+                ticketAttachment.UserId = User.Identity.GetUserId();
+                ticketAttachment.Created = DateTime.Now;
+                ticketAttachment.UserId = User.Identity.GetUserId();
+                ticketAttachment.TicketId = ticketId;
+                db.TicketAttachments.Add(ticketAttachment);
+                db.SaveChanges();
+                return RedirectToAction("Details", new { id = ticketId});
+            }
+            return View(ticketAttachment);
+        }
+
 
         // GET: Tickets/Edit/5
         public ActionResult Edit(int? id)
@@ -134,15 +199,41 @@ namespace GurBhugTracker.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.Entry(ticket).State = EntityState.Modified;
+                var dateChanged = DateTimeOffset.Now;
+                var changes = new List<TicketHistory>();
+                var dbTicket = db.Tickets.First(p => p.Id == ticket.Id);
+                dbTicket.Name = ticket.Name;
+                dbTicket.Description = ticket.Description;
+                dbTicket.TicketTypeId = ticket.TicketTypeId;
+                dbTicket.Updated = dateChanged;
+                var originalValues = db.Entry(dbTicket).OriginalValues;
+                var currentValues = db.Entry(dbTicket).CurrentValues;
+                foreach (var property in originalValues.PropertyNames)
+                {
+                    var originalValue = originalValues[property]?.ToString();
+                    var currentValue = currentValues[property]?.ToString();
+                    if (originalValue != currentValue)
+                    {
+                        var history = new TicketHistory();
+                        history.OldValue = originalValue;
+                        history.Changed = dateChanged;
+                        history.Property = property;
+                        history.NewValue = currentValue;
+                        history.TicketId = dbTicket.Id;
+                        history.UserId = User.Identity.GetUserId();
+                        changes.Add(history);
+                    }
+                }
+                db.TicketHistories.AddRange(changes);
+
+
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
-            //ViewBag.AssigneeId = new SelectList(db.Users, "Id", "DisplayName", ticket.AssigneeId);
-            //ViewBag.CreaterId = new SelectList(db.Users, "Id", "DisplayName", ticket.CreaterId);
+          
             ViewBag.ProjectId = new SelectList(db.Projects, "Id", "Name", ticket.ProjectId);
             ViewBag.TicketPriorityId = new SelectList(db.TicketPriorities, "Id", "Name", ticket.TicketPriorityId);
-           // ViewBag.TicketStatusId = new SelectList(db.TicketStatuses, "Id", "Name", ticket.TicketStatusId);
+          
             ViewBag.TicketTypeId = new SelectList(db.TicketTypes, "Id", "Name", ticket.TicketTypeId);
             return View(ticket);
         }
@@ -182,4 +273,5 @@ namespace GurBhugTracker.Controllers
             base.Dispose(disposing);
         }
     }
+
 }
