@@ -5,7 +5,9 @@ using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Mail;
 using System.Web;
+using System.Web.Configuration;
 using System.Web.Mvc;
 using GurBhugTracker.Models;
 using Microsoft.AspNet.Identity;
@@ -16,8 +18,9 @@ namespace GurBhugTracker.Controllers
     public class TicketsController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
-
-        // GET: Tickets
+        private UserRoleHelper URH = new UserRoleHelper();
+             
+        // GET: Tickets 
         public ActionResult Index()
         {
             var tickets = db.Tickets.Include(t => t.Assignee).Include(t => t.Creater).Include(t => t.Project).Include(t => t.TicketPriority).Include(t => t.TicketStatus).Include(t => t.TicketType);
@@ -25,10 +28,16 @@ namespace GurBhugTracker.Controllers
         }
 
 
+        //: Assign Users
+
+
+
         // Get Submitter Tickets
-        public ActionResult SubmitterTickets() {
+        public ActionResult SubmitterTickets()
+        {
             var user = User.Identity.GetUserId();
-            if (User.IsInRole("Submitter")) {
+            if (User.IsInRole("Submitter"))
+            {
                 var tickets = db.Tickets.Where(t => t.CreaterId == user).Include(t => t.Creater).Include(t => t.Assignee).Include(t => t.Project);
                 return View("Index", tickets.ToList());
             }
@@ -41,19 +50,92 @@ namespace GurBhugTracker.Controllers
             {
                 return View(db.Tickets.Include(t => t.TicketPriority).Include(t => t.Project).Include(t => t.Comments).Include(t => t.TicketStatus).Include(t => t.TicketType).Where(p => p.AssigneeId == user).ToList());
             }
-                return View("Index");
+            return View("Index");
 
         }
 
-        [Authorize(Roles = "Project Manager,Developer")]
-        public ActionResult UserInRoleTickets()
+        public  ActionResult AssignDevelopers(int? id)
         {
-            string userId = User.Identity.GetUserId();
-            var UserInRoleId = db.Users.Where(p => p.Id == userId).FirstOrDefault();
-            var ProjectId = UserInRoleId.Projects.Select(p => p.Id).FirstOrDefault();
-            var tickets = db.Tickets.Where(p => p.Id == ProjectId).ToList();
-            return View("Index", tickets);
+            if (id == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            var model = new AssinDevlViewModal();
+            //STEP 1: Find the ticket (by ID) that you want to assign a developer.
+
+            var tiket = db.Tickets.FirstOrDefault(x => x.Id == id);
+
+
+            //STEP 2: If there is a developer already assigned to the ticket,
+            //        Store his ID into a variable.
+            model.DeveloperId = tiket.AssigneeId;
+
+
+            //STEP 3: Find all the users in the database that are in the role "Developer"
+            //        a) find the ID of the Developer ROLE
+            //        b) find all users that are in the developer role using the Developer ROLE ID
+
+
+            var developerrole = db.Roles.Where(x => x.Name == "Developer").FirstOrDefault().Id;
+            var users = db.Users.Where(x => x.Roles.Any(c => c.RoleId == developerrole)).ToList();
+            //STEP 4: Construct a MultiSelectList object with the following parameters:
+            //        1 - The list of users that are in the developer role
+            //        2 - The field that you want to use as an ID
+            //        3 - The field that you want to display to the user on the screen
+            //        4 - The ID of the developer that is assigned to the ticket (IF any)
+
+
+            model.user = new MultiSelectList(users, "Id", "Name", null, "Id");
+
+
+
+
+            //model.Id = id;
+            //var tickets = db.Tickets.FirstOrDefault(p => p.Id == id);
+            //var assignId = tickets.AssigneeId;
+            //var users = db.Users.Where(p => p.Roles.Any(i => i.RoleId == assignId)).ToList();
+            //model.Majhbhi = new SelectList(users, "Id", "Name");
+            return View(model);
         }
+
+        [HttpPost]
+        public ActionResult AssignDevelopers(AssinDevlViewModal model)
+        {
+            //STEP 1: Find the ticket.
+
+            var tiket = db.Tickets.FirstOrDefault(x => x.Id == model.Id);
+            //STEP 2: Assign the developer that the user select to the ticket.
+
+            tiket.AssigneeId = model.DeveloperId;
+            var user = db.Users.FirstOrDefault(i => i.Id == model.DeveloperId);
+            //STEP 3: Save the ticket.
+            var personalEmailService = new PersonalEmailService();
+            var mailMessage = new MailMessage(
+               WebConfigurationManager.AppSettings["emailto"],
+              user
+               .Email);
+            mailMessage.Body = "hi";
+            mailMessage.Subject = "hi";
+            mailMessage.IsBodyHtml = true;
+            personalEmailService.Send(mailMessage);
+            db.SaveChanges();
+            return RedirectToAction("Index");
+           
+           
+            ////STEP 3: Assign users to the project
+            //if (model.Majhbhi != null)
+            //{
+            //    foreach (var userId in model.Majhbhi)
+            //    {
+            //        var user = db.Users.FirstOrDefault(p => p.Id == userId);
+            //        ticket.Users.Add(user);
+            //    }
+            //}
+            //STEP 4: Save changes to the database
+            
+        }
+
 
         // GET: Tickets/Details/5
         public ActionResult Details(int? id)
@@ -76,6 +158,7 @@ namespace GurBhugTracker.Controllers
             var tickets = db.Tickets
                .Where(p => p.Id == id)
                .FirstOrDefault();
+            var useR = User.Identity.GetUserId();
             if (tickets == null)
             {
                 return HttpNotFound();
@@ -85,13 +168,31 @@ namespace GurBhugTracker.Controllers
                 ViewBag.ErrorMessage = "Comment is required";
                 return View("Details", tickets);
             }
-            var comment1 = new TicketComment();
-            comment1.UserId = User.Identity.GetUserId();
-            comment1.TicketId = tickets.Id;
-            comment1.Created = DateTime.Now;
-            comment1.Cpmment = body;
-            db.TicketComments.Add(comment1);
-            db.SaveChanges();
+            if ((User.IsInRole("Submitter") && tickets.CreaterId == useR
+                ) || (User.IsInRole("Developer") && tickets.AssigneeId == useR
+                ) || (User.IsInRole("Project Manager") && tickets.Project.User.Select(p => p.Id).Contains(useR)))
+            {
+                var comment1 = new TicketComment();
+                comment1.UserId = User.Identity.GetUserId();
+                comment1.TicketId = tickets.Id;
+                comment1.Created = DateTime.Now;
+                comment1.Cpmment = body;
+                var userid = db.Users.FirstOrDefault(c => c.Id == comment1.UserId);
+
+                db.TicketComments.Add(comment1);
+
+                // Plug in your email service here to send an email.
+                var personalEmailService = new PersonalEmailService();
+                var mailMessage = new MailMessage(
+                   WebConfigurationManager.AppSettings["emailto"],
+                   userid.Email);
+                mailMessage.Body = "hi";
+                mailMessage.Subject = "hi";
+                mailMessage.IsBodyHtml = true;
+                personalEmailService.Send(mailMessage);
+                db.SaveChanges();
+
+            }
             return RedirectToAction("Details", new { id });
         }
 
@@ -112,11 +213,11 @@ namespace GurBhugTracker.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [Authorize(Roles="Submitter")]
+        [Authorize(Roles = "Submitter")]
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = "Id,Name,Description,TicketTypeId,TicketPriorityId,ProjectId")] Ticket ticket)
         {
-           
+
             if (ModelState.IsValid)
             {
                 if (ticket == null)
@@ -125,12 +226,12 @@ namespace GurBhugTracker.Controllers
                 }
                 ticket.TicketStatusId = 3;
                 db.Tickets.Add(ticket);
-                
+
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
 
-          
+
             ViewBag.ProjectId = new SelectList(db.Projects, "Id", "Name", ticket.ProjectId);
             ViewBag.TicketPriorityId = new SelectList(db.TicketPriorities, "Id", "Name", ticket.TicketPriorityId);
             ViewBag.TicketTypeId = new SelectList(db.TicketTypes, "Id", "Name", ticket.TicketTypeId);
@@ -145,6 +246,8 @@ namespace GurBhugTracker.Controllers
             if (ModelState.IsValid)
             {
                 var tickets = db.Tickets.FirstOrDefault(t => t.Id == ticketId);
+                var userId = User.Identity.GetUserId();
+                var user = db.Users.FirstOrDefault(i => i.Id == userId);
                 if (!ImageUploadValidator.IsWebFriendlyImage(image))
                 {
                     ViewBag.ErrorMessage = "Please upload an image";
@@ -154,16 +257,29 @@ namespace GurBhugTracker.Controllers
                 {
                     return HttpNotFound();
                 }
-                var fileName = Path.GetFileName(image.FileName);
-                image.SaveAs(Path.Combine(Server.MapPath("~/Uploads/"), fileName));
-                ticketAttachment.FilePath = "/Uploads/" + fileName;
-                ticketAttachment.UserId = User.Identity.GetUserId();
-                ticketAttachment.Created = DateTime.Now;
-                ticketAttachment.UserId = User.Identity.GetUserId();
-                ticketAttachment.TicketId = ticketId;
-                db.TicketAttachments.Add(ticketAttachment);
-                db.SaveChanges();
-                return RedirectToAction("Details", new { id = ticketId});
+                if ((User.IsInRole("Submitter") && tickets.CreaterId == userId) || (User.IsInRole("Developer") && tickets.AssigneeId == userId) || (User.IsInRole("Project Manager") && tickets.Project.User.Select(p => p.Id).Contains(userId)))
+                {
+
+                    var fileName = Path.GetFileName(image.FileName);
+                    image.SaveAs(Path.Combine(Server.MapPath("~/Uploads/"), fileName));
+                    ticketAttachment.FilePath = "/Uploads/" + fileName;
+                    ticketAttachment.UserId = User.Identity.GetUserId();
+                    ticketAttachment.Created = DateTime.Now;
+                    ticketAttachment.UserId = User.Identity.GetUserId();
+                    ticketAttachment.TicketId = ticketId;
+                    db.TicketAttachments.Add(ticketAttachment);
+                    var personalEmailService = new PersonalEmailService();
+                    var mailMessage = new MailMessage(
+                       WebConfigurationManager.AppSettings["emailto"],
+                       user.Email);
+                    mailMessage.Body = "hi";
+                    mailMessage.Subject = "hi";
+                    mailMessage.IsBodyHtml = true;
+                    personalEmailService.Send(mailMessage);
+                    db.SaveChanges();
+                }
+                    return RedirectToAction("Details", new { id = ticketId });
+                
             }
             return View(ticketAttachment);
         }
@@ -230,10 +346,10 @@ namespace GurBhugTracker.Controllers
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
-          
+
             ViewBag.ProjectId = new SelectList(db.Projects, "Id", "Name", ticket.ProjectId);
             ViewBag.TicketPriorityId = new SelectList(db.TicketPriorities, "Id", "Name", ticket.TicketPriorityId);
-          
+
             ViewBag.TicketTypeId = new SelectList(db.TicketTypes, "Id", "Name", ticket.TicketTypeId);
             return View(ticket);
         }

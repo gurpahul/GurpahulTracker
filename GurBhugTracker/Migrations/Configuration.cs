@@ -18,10 +18,6 @@ namespace GurBhugTracker.Migrations
 
         protected override void Seed(GurBhugTracker.Models.ApplicationDbContext context)
         {
-            //  This method will be called after migrating to the latest version.
-
-            //  You can use the DbSet<T>.AddOrUpdate() helper extension method 
-            //  to avoid creating duplicate seed data.
             var userManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(context));
             var roleManager = new RoleManager<IdentityRole>(new RoleStore<IdentityRole>(context));
 

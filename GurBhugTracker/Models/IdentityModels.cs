@@ -41,9 +41,7 @@ namespace GurBhugTracker.Models
 
         public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager)
         {
-            // Note the authenticationType must match the one defined in CookieAuthenticationOptions.AuthenticationType
             var userIdentity = await manager.CreateIdentityAsync(this, DefaultAuthenticationTypes.ApplicationCookie);
-            // Add custom user claims here
             return userIdentity;
         }
     }
@@ -61,15 +59,10 @@ namespace GurBhugTracker.Models
         }
 
         public System.Data.Entity.DbSet<GurBhugTracker.Models.Projects> Projects { get; set; }
-
-
-
         public System.Data.Entity.DbSet<GurBhugTracker.Models.Ticket> Tickets { get; set; }
-
         public System.Data.Entity.DbSet<GurBhugTracker.Models.TicketStatus> TicketStatuses { get; set; }
         public System.Data.Entity.DbSet<GurBhugTracker.Models.TicketPriority> TicketPriorities { get; set; }
         public System.Data.Entity.DbSet<GurBhugTracker.Models.TicketType> TicketTypes { get; set; }
-
         public System.Data.Entity.DbSet<GurBhugTracker.Models.TicketAttachment> TicketAttachments { get; set; }
         public System.Data.Entity.DbSet<GurBhugTracker.Models.TicketComment> TicketComments { get; set; }
         public System.Data.Entity.DbSet<GurBhugTracker.Models.TicketHistory> TicketHistories { get; set; }

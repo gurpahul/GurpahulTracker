@@ -104,7 +104,7 @@
                             @if (User.IsInRole("Project Manager"))
                             {
                                 <td>
-                                    @Html.ActionLink("AssignDeveloper", "AssignDeveloper", new { ticketId = item.Id })
+                                    @Html.ActionLink("AssignDeveloper", "AssignDevelopers", new { id = item.Id })
                                 </td>
                                 <td>
                                     @Html.ActionLink("Edit", "Edit", new { id = item.Id })

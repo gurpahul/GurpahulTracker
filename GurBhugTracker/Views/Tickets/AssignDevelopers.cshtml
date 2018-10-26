@@ -1,8 +1,9 @@
 ﻿@model GurBhugTracker.Models.AssinDevlViewModal
-
 @{
-    ViewBag.Title = "AssignUsers";
+    ViewBag.Title = "AssignDevelopers";
 }
+
+<h2>AssignDevelopers</h2>
 
 <div id="page-wrapper">
     <div class="container-fluid">
@@ -12,7 +13,7 @@
         @using (Html.BeginForm())
         {
             @Html.HiddenFor(p => p.Id)
-            @Html.ListBoxFor(p => p.Id, Model.user) 
+            @Html.DropDownListFor(p => p.DeveloperId, Model.user, htmlAttributes: new {@class = "form-control" })
             <input type="submit" value="Submit!" />
         }
 
@@ -26,7 +27,4 @@
     </div>
 
 </div>
-
-
-
 

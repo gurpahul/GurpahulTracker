@@ -30,6 +30,7 @@ namespace GurBhugTracker.Models
         public virtual ICollection<TicketAttachment> Attachments { get; set; }
         public virtual ICollection<TicketComment> Comments { get; set; }
         public virtual ICollection<TicketHistory> Histories { get; set; }
+        public virtual ICollection<ApplicationUser> Users { get; set; }
 
 
 
@@ -40,6 +41,8 @@ namespace GurBhugTracker.Models
             Attachments = new HashSet<TicketAttachment>();
             Comments = new HashSet<TicketComment>();
             Histories = new HashSet<TicketHistory>();
+            Users = new HashSet<ApplicationUser>();
+
         }
 
     }
