@@ -62,40 +62,22 @@ namespace GurBhugTracker.Controllers
             }
 
             var model = new AssinDevlViewModal();
-            //STEP 1: Find the ticket (by ID) that you want to assign a developer.
+
 
             var tiket = db.Tickets.FirstOrDefault(x => x.Id == id);
 
-
-            //STEP 2: If there is a developer already assigned to the ticket,
-            //        Store his ID into a variable.
+            
             model.DeveloperId = tiket.AssigneeId;
-
-
-            //STEP 3: Find all the users in the database that are in the role "Developer"
-            //        a) find the ID of the Developer ROLE
-            //        b) find all users that are in the developer role using the Developer ROLE ID
+            
 
 
             var developerrole = db.Roles.Where(x => x.Name == "Developer").FirstOrDefault().Id;
             var users = db.Users.Where(x => x.Roles.Any(c => c.RoleId == developerrole)).ToList();
-            //STEP 4: Construct a MultiSelectList object with the following parameters:
-            //        1 - The list of users that are in the developer role
-            //        2 - The field that you want to use as an ID
-            //        3 - The field that you want to display to the user on the screen
-            //        4 - The ID of the developer that is assigned to the ticket (IF any)
+        
 
 
             model.user = new MultiSelectList(users, "Id", "Name", null, "Id");
 
-
-
-
-            //model.Id = id;
-            //var tickets = db.Tickets.FirstOrDefault(p => p.Id == id);
-            //var assignId = tickets.AssigneeId;
-            //var users = db.Users.Where(p => p.Roles.Any(i => i.RoleId == assignId)).ToList();
-            //model.Majhbhi = new SelectList(users, "Id", "Name");
             return View(model);
         }
 
@@ -121,19 +103,7 @@ namespace GurBhugTracker.Controllers
             personalEmailService.Send(mailMessage);
             db.SaveChanges();
             return RedirectToAction("Index");
-           
-           
-            ////STEP 3: Assign users to the project
-            //if (model.Majhbhi != null)
-            //{
-            //    foreach (var userId in model.Majhbhi)
-            //    {
-            //        var user = db.Users.FirstOrDefault(p => p.Id == userId);
-            //        ticket.Users.Add(user);
-            //    }
-            //}
-            //STEP 4: Save changes to the database
-            
+          
         }
 
 
